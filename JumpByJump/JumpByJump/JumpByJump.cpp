@@ -7,7 +7,7 @@ using namespace  std;
 
 #define CAPTION	"微信自动跳一跳 V1.0"
 
-double m_parameter = 1.18;
+double m_parameter = 1.25;
 
 void onClick(int event, int x, int y, int flags, void* param)
 {
@@ -15,17 +15,30 @@ void onClick(int event, int x, int y, int flags, void* param)
 	{
 		return;
 	}
-	cout << "目标点坐标：" << "(" << x << "," << y << ")" << endl;
 	JumpByJump* jumper = (JumpByJump*)param;
-	jumper->m_targetPosX = x;
-	jumper->m_targetPosY = y;
-	CvPoint chessLoc = jumper->LocateChess();
-	double distance = sqrt(powf(jumper->m_targetPosX - chessLoc.x, 2) + powf(jumper->m_targetPosY - chessLoc.y, 2));
-	ADBHelper::jump(distance * m_parameter);
-	Sleep(1000);//等待截图
-	ADBHelper::CapScreen();
-	jumper->ReadImage();
-	jumper->ShowScreen();
+
+	if (m_iCount % 2 == 0)
+	{
+
+		cout << "棋子坐标：" << "(" << x << "," << y << ")" << endl;
+		jumper->m_sourcePosX = x;
+		jumper->m_sourcePosY = y;
+		m_iCount++;
+	}
+	else
+	{
+		cout << "目标点坐标：" << "(" << x << "," << y << ")" << endl;
+		jumper->m_targetPosX = x;
+		jumper->m_targetPosY = y;
+		// 	CvPoint chessLoc = jumper->LocateChess();
+		double distance = sqrt(powf(jumper->m_targetPosX - jumper->m_sourcePosX, 2) + powf(jumper->m_targetPosY - jumper->m_sourcePosY, 2));
+		ADBHelper::jump(distance * m_parameter);
+		Sleep(1000);//等待截图
+		ADBHelper::CapScreen();
+		jumper->ReadImage();
+		jumper->ShowScreen();
+		m_iCount++;
+	}
 }
 
 JumpByJump::JumpByJump()
@@ -36,7 +49,9 @@ JumpByJump::JumpByJump()
 	//载入棋子模型
 	m_imgChessModel = cvLoadImage("chess.png");
 	cvNamedWindow(CAPTION, 0);
-	//设置鼠标点击回调函数
+	//初始位置
+	cvSetMouseCallback(CAPTION, onClick, (void*)this);
+	//目标位置
 	cvSetMouseCallback(CAPTION, onClick, (void*)this);
 }
 
